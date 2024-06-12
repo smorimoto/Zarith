@@ -19,53 +19,36 @@ jobs:
           - windows-latest
           - macos-latest
         ocaml-compiler:
-          - 4.14.x
-        include:
-          - os: ubuntu-latest
-            ocaml-compiler: 5.1.x
-          - os: macos-latest
-            ocaml-compiler: 5.1.x
-          - os: windows-latest
-            ocaml-compiler: ocaml.5.0.0,ocaml-option-mingw
+          - "4.14"
+          - "5.2"
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout tree
+        uses: actions/checkout@v4
 
-      - name: Use OCaml ${{ matrix.ocaml-compiler }}
-        uses: ocaml/setup-ocaml@v2
-        if: runner.os != 'Windows'
+      - name: Set-up OCaml ${{ matrix.ocaml-compiler }}
+        uses: kit-ty-kate/setup-ocaml@win52
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
+          allow-prerelease-opam: true
           dune-cache: true
-          opam-depext: true
-          opam-depext-flags: --with-test
 
-      - name: Use OCaml ${{ matrix.ocaml-compiler }}
-        uses: ocaml/setup-ocaml@v2
-        if: runner.os == 'Windows'
-        with:
-          ocaml-compiler: ${{ matrix.ocaml-compiler }}
-          opam-repositories: |
-            dra27: https://github.com/dra27/opam-repository.git#windows-5.0
-            default: https://github.com/ocaml-opam/opam-repository-mingw.git#sunset
-            opam: https://github.com/ocaml/opam-repository.git
-          dune-cache: true
-          opam-depext: true
-          opam-depext-flags: --with-test
+      - name: Install dependencies on Linux
+        if: ${{ runner.os == 'Linux' }}
+        run: apt-get install libgmp-dev
 
-      - name: configure tree
-        run: opam exec -- ./configure
+      - name: Install deps on macOS
+        if: ${{ runner.os == 'macOS' }}
+        run: brew install gmp
 
-      - name: Build
-        run: opam exec -- make
+      - run: ./configure
 
-      - name: Run the testsuite
-        run: opam exec -- make -C tests test
+      - run: opam exec -- make
+
+      - run: opam exec -- make -C tests test
 
       - run: opam install . --with-test
 
-      - run: opam exec -- git diff --exit-code
-        if: ${{ !matrix.skip-test }}
+      - run: git diff --exit-code
