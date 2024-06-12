@@ -33,6 +33,9 @@ jobs:
           allow-prerelease-opam: true
           dune-cache: true
 
+      - run: opam pin add mingw-w64-shims git+https://github.com/dra27/mingw-w64-shims.git#internals
+        if: ${{ runner.os == 'Windows' }}
+
       - name: Install dependencies on Linux
         if: ${{ runner.os == 'Linux' }}
         run: apt-get install libgmp-dev
