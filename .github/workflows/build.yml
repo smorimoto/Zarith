@@ -44,7 +44,7 @@ jobs:
         if: ${{ runner.os == 'macOS' }}
         run: brew install gmp
 
-      - run: ./configure
+      - run: opam exec -- ./configure
 
       - run: opam exec -- make
 
